@@ -63,17 +63,48 @@ export interface SandboxAdapter {
 
 const MAX_CAPTURE = 4 * 1024 * 1024;
 
+/** Sandbox capability of this host: macOS seatbelt, or nothing at all. */
+export function hostIsolation(): 'sandbox-exec' | 'none' {
+  return existsSync('/usr/bin/sandbox-exec') ? 'sandbox-exec' : 'none';
+}
+
+/** Escape hatch for hosts without seatbelt; unisolated runs must be asked for by name. */
+const ALLOW_UNSANDBOXED = /^(1|true|yes)$/i.test(process.env['DORA_ALLOW_UNSANDBOXED'] ?? '');
+
+const UNSANDBOXED_REFUSAL =
+  'the host has no sandbox (no /usr/bin/sandbox-exec), so this command was not run.\n' +
+  'Set DORA_ALLOW_UNSANDBOXED=1 to run commands unconfined on a host you trust.\n';
+
 export class LocalSandboxAdapter implements SandboxAdapter {
   readonly name = 'local';
   readonly isolation: 'sandbox-exec' | 'none';
   private readonly profileBuilder: (fs: FsPolicy, cwd: string, network: boolean) => string | null;
+  private readonly requireIsolation: boolean;
 
-  constructor(options: { profileBuilder: (fs: FsPolicy, cwd: string, network: boolean) => string | null }) {
+  constructor(options: {
+    profileBuilder: (fs: FsPolicy, cwd: string, network: boolean) => string | null;
+    isolation?: 'sandbox-exec' | 'none';
+    requireIsolation?: boolean;
+  }) {
     this.profileBuilder = options.profileBuilder;
-    this.isolation = existsSync('/usr/bin/sandbox-exec') ? 'sandbox-exec' : 'none';
+    this.isolation = options.isolation ?? hostIsolation();
+    this.requireIsolation = options.requireIsolation ?? !ALLOW_UNSANDBOXED;
   }
 
   async exec(spec: ExecSpec): Promise<ExecResult> {
+    if (this.isolation !== 'sandbox-exec' && this.requireIsolation) {
+      // Fail closed: an unisolated host must opt in explicitly, never by accident.
+      return {
+        stdout: '',
+        stderr: UNSANDBOXED_REFUSAL,
+        exitCode: 126,
+        signal: null,
+        timedOut: false,
+        durationMs: 0,
+        truncated: false,
+        isolation: 'none'
+      };
+    }
     const started = Date.now();
     const maxBytes = spec.maxOutputBytes ?? MAX_CAPTURE;
     const profile = this.isolation === 'sandbox-exec' ? this.profileBuilder(spec.fs, spec.cwd, spec.network ?? true) : null;

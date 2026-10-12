@@ -147,8 +147,9 @@ tests/                 58 个 node:test 用例
 
 ## 已知边界
 
-- 沙箱是本机 seatbelt（`sandbox-exec`）：隔离是内核事实而不是提示词约定，`/memory` 可读不可写、
-  vault 与数据库不可读；托管沙箱只有接口占位（`RemoteSandboxAdapter` 未实现）。
+- 沙箱是本机 seatbelt（`sandbox-exec`），不是云端微虚拟机：隔离是内核事实而不是提示词约定，`/memory` 可读不可写、
+  vault 与数据库不可读。宿主没有 `sandbox-exec` 时 bash **拒绝执行**（除非显式设置 `DORA_ALLOW_UNSANDBOXED=1`），
+  且沙箱内保留网络访问；托管沙箱只有接口占位（`RemoteSandboxAdapter` 未实现）。
 - connector 是本地账号：fixture 数据集或 `add-account --token`，不需要任何厂商登录；
   未连接的 connector 只在动作面里留名字，调用只回状态行。
 - 浏览器由本地 HTTP 驱动 + lease 调度器实现；截图是文本渲染，真实视觉验证需要接一个浏览器或截图服务。

@@ -35,10 +35,16 @@ export function buildProfile(policy: FsPolicy, cwd: string, network: boolean): s
   // Drop hidden entries that live *inside* a writable root (they would be re-allowed
   // anyway); keep entries that contain the workspace, because the workspace is re-allowed
   // by an explicit later rule.
-  const hidden = policy.hidden.map(real).filter((h) => !writable.some((w) => w.startsWith(h + '/')));
+  const hidden = policy.hidden.map(real).filter((h) => !writable.some((w) => h.startsWith(w + '/')));
+  // Entries that *contain* the workspace still have to stay traversable for metadata:
+  // Node resolves its own entry point with realpath, which stats every path component, so
+  // a blanket deny on a parent directory breaks the tools CLI that runs inside the
+  // workspace. Their contents stay denied; only lstat/stat on the path itself is allowed.
+  const ancestors = hidden.filter((h) => writable.some((w) => w.startsWith(h + '/')));
 
   const lines: string[] = ['(version 1)', '(allow default)'];
   if (hidden.length > 0) lines.push('(deny file-read* file-write* ' + subpaths(hidden) + ')');
+  if (ancestors.length > 0) lines.push('(allow file-read-metadata ' + subpaths(ancestors) + ')');
   lines.push('(allow file-read* ' + subpaths([...writable, ...readable]) + ')');
   lines.push('(deny file-write*)');
   lines.push(

@@ -142,7 +142,7 @@ async function cmdDoctor(): Promise<number> {
   push('node >= 22.6 (native TypeScript)', Number(process.versions.node.split('.')[0]) >= 22, process.versions.node);
   push('node:sqlite available', await hasSqlite(), 'used for events, observations and connector records');
   const seatbelt = existsSync('/usr/bin/sandbox-exec');
-  push('seatbelt sandbox available', seatbelt, seatbelt ? '/usr/bin/sandbox-exec present: the memory fence is a kernel rule' : 'missing: the sandbox falls back to a non-isolated runner');
+  push('seatbelt sandbox available', seatbelt, seatbelt ? '/usr/bin/sandbox-exec present: the memory fence is a kernel rule' : 'missing: bash refuses to run unless DORA_ALLOW_UNSANDBOXED=1 is set');
   push('git available', await hasGit(), 'the memory repo is a git repository');
   const runtime = await boot();
   const fence = await fenceCheck(runtime);

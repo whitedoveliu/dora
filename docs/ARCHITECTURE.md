@@ -39,7 +39,9 @@
   实现：`DoraConfig.bashTimeoutMs` 默认 45000；`inspectCommand()` 返回 `dollar_amount` / `multiline_quote` 两类拦截。
 - **隔离是内核事实，不是提示词**：Dora 用 seatbelt（`buildProfile()`）把围栏写成内核规则：
   `/memory` 可读不可写、vault 与数据库不可读、只有工作区可写、只放行本 session 的 tools socket。
-  `dora doctor` 与 `tests/helpers.ts` 都会实测这两条围栏。
+  `dora doctor` 与 `tests/helpers.ts` 都会实测这两条围栏。围栏是**本机**的，不是云端微虚拟机：
+  宿主没有 `sandbox-exec` 时 bash 直接拒绝执行，只有显式设置 `DORA_ALLOW_UNSANDBOXED=1` 才降级为无隔离运行；
+  沙箱内保留网络访问（要连本 session 的 tools socket）。
 - 边界：**不在这一层**的是供应商接入；`RemoteSandboxAdapter` 是留给托管沙箱的接口占位，尚未实现。
 
 ### 数据面

@@ -2,8 +2,20 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { inspectCommand, redirectsStdoutToFile, invokesToolsCli } from '@dora/sandbox';
+import { LocalSandboxAdapter, inspectCommand, redirectsStdoutToFile, invokesToolsCli } from '@dora/sandbox';
 import { harness } from './helpers.ts';
+
+test('a host without a sandbox refuses to run commands unless explicitly allowed', async () => {
+  const spec = { command: 'echo hi', cwd: process.cwd(), env: {}, timeoutMs: 5_000, fs: { writable: [], readable: [], hidden: [] } };
+  const refused = await new LocalSandboxAdapter({ profileBuilder: () => null, isolation: 'none' }).exec(spec);
+  assert.equal(refused.exitCode, 126);
+  assert.equal(refused.isolation, 'none');
+  assert.match(refused.stderr, /DORA_ALLOW_UNSANDBOXED/);
+
+  const allowed = await new LocalSandboxAdapter({ profileBuilder: () => null, isolation: 'none', requireIsolation: false }).exec(spec);
+  assert.equal(allowed.exitCode, 0);
+  assert.match(allowed.stdout, /hi/);
+});
 
 test('the two content filters match the documented rule', () => {
   const amount = inspectCommand('tools payments pay --amount $12.50');

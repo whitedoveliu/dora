@@ -125,6 +125,13 @@ export async function createRuntime(options: RuntimeOptions = {}): Promise<Runti
 
   const workspaces = new Map<string, Workspace>();
   const adapter = new LocalSandboxAdapter({ profileBuilder: buildProfile });
+  if (adapter.isolation === 'none') {
+    const allowUnsandboxed = /^(1|true|yes)$/i.test(process.env['DORA_ALLOW_UNSANDBOXED'] ?? '');
+    // The host cannot fence commands: say how that resolves, once, at startup.
+    log.warn('host has no sandbox (no /usr/bin/sandbox-exec)', {
+      effect: allowUnsandboxed ? 'bash runs unconfined' : 'bash is disabled until DORA_ALLOW_UNSANDBOXED=1 is set'
+    });
+  }
   const toolsSecret = getKv(db, 'tools_secret') ?? (() => {
     const secret = randomBytes(32).toString('base64url');
     setKv(db, 'tools_secret', secret);
