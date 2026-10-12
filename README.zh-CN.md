@@ -1,8 +1,6 @@
 <div align="center">
 
-# Dora.ai
-
-**开源版 Instinct。**
+# Dora.ai：开源版 Instinct
 
 [English](README.md) · **简体中文**
 

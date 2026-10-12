@@ -1,8 +1,6 @@
 <div align="center">
 
-# Dora.ai
-
-**The open-source version of Instinct.**
+# Dora.ai: the open-source version of Instinct
 
 English · [简体中文](README.zh-CN.md)
 
