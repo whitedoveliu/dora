@@ -68,7 +68,7 @@ export class OpenAiCompatibleProvider implements ModelProvider {
     temperature?: number;
     purpose?: string;
   }): Promise<ModelResponse> {
-    if (!this.options.apiKey) throw new Error('no model API key configured (set DORA_API_KEY or configure a credentials file)');
+    if (!this.options.apiKey) throw new Error('no model API key configured: set DORA_API_KEY or point DORA_CREDENTIAL_FILES at a credentials file');
     const body: Record<string, unknown> = {
       model: input.model,
       messages: this.serialise(input.messages),

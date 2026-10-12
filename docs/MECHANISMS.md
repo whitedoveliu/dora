@@ -73,7 +73,7 @@
 | 2 | 相对 `--dir` 直接崩："memory path escapes the repo" | dataDir 未绝对化，MemoryStore 的 root 守卫用字符串前缀比较 | `loadConfig` 统一绝对化 + 各 store 自行 `resolve` | `regressions` |
 | 3 | 模型按提示去 `cat /memory/...` 全部失败，白烧 24 轮 | 提示词广播的是预览 session 的路径 | 路径按真实 session 计算并注入 | `regressions`（prompt 路径） |
 | 4 | `observations sql` 能读到 `connector_accounts.credentials` | SQL 只有语法守卫，没有关系白名单 | 只允许 observations 及其来源视图 | `regressions` |
-| 5 | Agent 能读产品源码、`~/.config/dora/credentials.json`（模型 key） | seatbelt 只隐藏了 DB/vault，源码与凭证库仍可读 | CLI 打包进工作区；隐藏源码树、`~/.config/dora`、`~/.config/dora` 等 | `sandbox` + 手动围栏探针 |
+| 5 | Agent 能读产品源码与本机凭证目录（模型 key） | seatbelt 只隐藏了 DB/vault，源码树和别人家目录里的凭证仍可读 | CLI 打包进工作区；默认隐藏源码树与常见凭证目录，可用 `DORA_HIDDEN_PATHS` 追加 | `sandbox` + 手动围栏探针 |
 | 6 | 面板打印的 `?token=` URL 打开后全站 401 | `boot()` 从未读取 query 里的 token | boot 先 `readTokenFromQuery()` 再发首个请求 | `tools/browser-check`（Chromium 实测 0 错误） |
 | 7 | `tools help todos.read` 只回 "unknown target" | 帮助没有"族存在但动作不存在"的分支 | 提示该族可用动作 | `regressions` |
 | 8 | 读单条邮件/事件经常 "no message" | 读取处理器只取前 N 行再按 id 过滤 | `records({externalId})` 直接按 id 查 | 由 bench e4 覆盖 |

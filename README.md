@@ -136,6 +136,8 @@ Environment:
 | `DORA_API_KEY` / `DORA_BASE_URL` | — / DeepSeek | any OpenAI-compatible endpoint |
 | `DORA_MODEL_MAIN` / `_FAST` / `_SMART` | `deepseek-v4-pro` / `-flash` / `-pro` | per-tier model ids |
 | `DORA_ALLOW_UNSANDBOXED` | unset | `1` runs bash without a fence on a host that has none |
+| `DORA_CREDENTIAL_FILES` | `~/.config/dora/credentials.json` | colon-separated credential files: JSON, `KEY="value"` or YAML `refs:` |
+| `DORA_HIDDEN_PATHS` | unset | extra paths the sandbox must never read |
 | `DORA_SEARCH_ENDPOINT` | DuckDuckGo lite | search backend for `search.search` / `web_fetch.fetch` |
 | `DORA_LOG_LEVEL` | `info` | `debug` · `info` · `warn` · `error` |
 

@@ -136,6 +136,8 @@ packages/{integrations,providers,skills}
 | `DORA_API_KEY` / `DORA_BASE_URL` | — / DeepSeek | 任意 OpenAI 兼容端点 |
 | `DORA_MODEL_MAIN` / `_FAST` / `_SMART` | `deepseek-v4-pro` / `-flash` / `-pro` | 各档模型 id |
 | `DORA_ALLOW_UNSANDBOXED` | 未设置 | 设为 `1` 时在无围栏的宿主上裸跑 bash |
+| `DORA_CREDENTIAL_FILES` | `~/.config/dora/credentials.json` | 冒号分隔的凭证文件：JSON / `KEY="value"` / YAML `refs:` 三种形状 |
+| `DORA_HIDDEN_PATHS` | 未设置 | 额外要求沙箱永不读取的路径 |
 | `DORA_SEARCH_ENDPOINT` | DuckDuckGo lite | `search.search` / `web_fetch.fetch` 的后端 |
 | `DORA_LOG_LEVEL` | `info` | `debug` · `info` · `warn` · `error` |
 

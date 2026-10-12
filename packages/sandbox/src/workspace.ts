@@ -147,9 +147,8 @@ export class Workspace {
       join(dataDir, 'workspaces'),
       join(dataDir, 'secrets'),
       join(dataDir, 'run'),
-      // Credential stores and the repository source tree.
-      join(homeDir(), '.config/dora'),
-      join(homeDir(), '.config/dora'),
+      // Credential stores and the repository source tree. `.ssh`, `.aws` and friends are
+      // generic on purpose; anything machine-specific belongs in DORA_HIDDEN_PATHS.
       join(homeDir(), '.ssh'),
       join(homeDir(), '.aws'),
       join(homeDir(), '.gnupg'),
@@ -158,6 +157,12 @@ export class Workspace {
       join(homeDir(), '.netrc'),
       join(homeDir(), '.npmrc'),
       this.options.repoRoot,
+      // Machine-specific paths the operator wants hidden too: colon-separated, `~/` expanded.
+      ...(process.env['DORA_HIDDEN_PATHS'] ?? '')
+        .split(':')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0)
+        .map((p) => (p.startsWith('~/') ? join(homeDir(), p.slice(2)) : p)),
       ...(this.options.hiddenExtra ?? [])
     ];
     // Memory, skills and observations stay readable; only the workspace is writable.

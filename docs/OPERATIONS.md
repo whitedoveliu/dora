@@ -4,14 +4,17 @@
 
 ## 1. 模型凭证
 
-运行时会自己找凭证，不需要你把 key 写进环境变量。查找顺序：
+运行时按下面的顺序找凭证，前两步都不需要改代码：
 
 | 顺序 | 位置 | 说明 |
 |---|---|---|
 | 1 | `DORA_API_KEY` / `DEEPSEEK_API_KEY` | 环境变量优先 |
-| 2 | `~/.config/dora/credentials.json` | 本机已有的凭证文件 |
-| 3 | `~/.config/dora/credentials.env` | `KEY="value"` 形式 |
-| 4 | `~/.config/dora/credentials.yaml` | 本机凭证库（refs 段） |
+| 2 | `DORA_CREDENTIAL_FILES` 列出的文件 | 冒号分隔、`~/` 会展开；每个文件按 JSON / `KEY="value"` / YAML `refs:` 三种形状之一解析 |
+| 3 | `~/.config/dora/credentials.json` | 默认位置，形状同上 |
+
+也就是说：运行时不去猜你这台机器上装了什么，只读你明确给出的路径。
+沙箱默认不看 `~/.ssh`、`~/.aws`、`~/.gnupg`、`~/.config` 等常见凭证目录，
+其它不想让 Agent 读到的东西用 `DORA_HIDDEN_PATHS`（冒号分隔、`~/` 会展开）追加。
 
 日志里只会出现指纹（如 `sk-7…77c(35 chars)`），永远不写完整 key。
 `DORA_MODEL_PROVIDER=mock` 可强制离线确定性模型（测试与 demo 默认如此）。

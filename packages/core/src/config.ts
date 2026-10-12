@@ -57,8 +57,8 @@ export function repoRoot(): string {
 
 /**
  * Which model backend to use. `DORA_MODEL_PROVIDER` wins; otherwise the runtime looks for
- * a credential the machine already has (an env var or a credentials file) and only falls back to the offline
- * mock when there is none.
+ * a credential the machine already has (an env var, or a file named by
+ * DORA_CREDENTIAL_FILES) and only falls back to the offline mock when there is none.
  */
 export function resolveModelBackend(): { provider: 'mock' | 'openai'; hit: CredentialHit | null; considered: { source: string; found: boolean; detail: string }[] } {
   const explicit = process.env.DORA_MODEL_PROVIDER;

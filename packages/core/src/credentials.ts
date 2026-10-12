@@ -5,14 +5,17 @@ import { join } from 'node:path';
 /**
  * Model credential discovery.
  *
- * The runtime must work on a machine that already has a model configured (this one has
- * both a local credential store), without asking the operator to copy a
- * key into an env var. Order of precedence:
+ * A key the machine already has beats asking the operator to paste one, but the runtime
+ * should not guess where that key lives. Order of precedence:
  *
  *   1. DORA_API_KEY / DEEPSEEK_API_KEY in the environment
- *   2. ~/.config/dora/credentials.json          (a provider store)
- *   3. ~/.config/dora/credentials.env          (KEY="value" lines)
- *   4. ~/.config/dora/credentials.yaml       (a credential store, refs section)
+ *   2. every file listed in DORA_CREDENTIAL_FILES (colon-separated, `~/` expanded)
+ *   3. ~/.config/dora/credentials.json
+ *
+ * Each file is read as whichever of these shapes it looks like:
+ *   - JSON: {"apiKey": "…", "baseUrl": "…"} or {"<provider>": {"key": "…"}}
+ *   - an env-style file with an `*_API_KEY="…"` line
+ *   - YAML with a `refs:` section holding an `*_API_KEY` entry
  *
  * A secret is never logged: callers log `fingerprint()` instead.
  */
@@ -41,61 +44,75 @@ function readJson(path: string): Record<string, unknown> | null {
   }
 }
 
-/** Parse the tiny subset of YAML the credential store uses. */
-function readCredentialYaml(path: string): { refs: Record<string, string>; records: Record<string, Record<string, string>> } {
-  const out: { refs: Record<string, string>; records: Record<string, Record<string, string>> } = { refs: {}, records: {} };
-  if (!existsSync(path)) return out;
-  const lines = readFileSync(path, 'utf8').split('\n');
-  let section = '';
-  let recordName = '';
-  let recordField = '';
-  for (const raw of lines) {
+/** Credential files to try, in order: the operator's list, then the neutral default. */
+export function credentialFiles(home: string): string[] {
+  const listed = (process.env['DORA_CREDENTIAL_FILES'] ?? '')
+    .split(':')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+    .map((p) => (p.startsWith('~/') ? join(home, p.slice(2)) : p));
+  return [...listed, join(home, '.config', 'dora', 'credentials.json')];
+}
+
+/** Parse the `refs:` section of a small YAML file: indented `NAME: value` lines. */
+function readYamlRefs(path: string): Record<string, string> {
+  const refs: Record<string, string> = {};
+  let inRefs = false;
+  for (const raw of readFileSync(path, 'utf8').split('\n')) {
     const line = raw.replace(/\s+$/, '');
     if (/^refs:\s*$/.test(line)) {
-      section = 'refs';
-      continue;
-    }
-    if (/^records:\s*$/.test(line)) {
-      section = 'records';
+      inRefs = true;
       continue;
     }
     if (/^[a-zA-Z]/.test(line)) {
-      section = '';
+      inRefs = false;
       continue;
     }
-    const indent = line.length - line.trimStart().length;
-    if (section === 'refs') {
-      const m = /^\s+([A-Z0-9_]+):\s*(.*)$/.exec(line);
-      if (m) out.refs[m[1]] = m[2].replace(/^["']|["']$/g, '');
-      continue;
+    if (!inRefs) continue;
+    const m = /^\s+([A-Z0-9_]+):\s*(.*)$/.exec(line);
+    if (m) refs[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+  return refs;
+}
+
+/** Read one credential file in whichever of the three shapes it uses. */
+function readKeyFromFile(path: string): { key: string; baseUrl?: string; shape: string } | null {
+  if (!existsSync(path)) return null;
+
+  const json = readJson(path);
+  if (json) {
+    const direct = json['apiKey'];
+    if (typeof direct === 'string' && direct.length > 0) {
+      const baseUrl = typeof json['baseUrl'] === 'string' ? (json['baseUrl'] as string) : undefined;
+      return { key: direct, baseUrl, shape: 'json apiKey' };
     }
-    if (section === 'records') {
-      if (indent === 2) {
-        const m = /^\s{2}([^:]+):\s*$/.exec(line);
-        if (m) {
-          recordName = m[1].trim();
-          out.records[recordName] = out.records[recordName] ?? {};
-        }
-        continue;
-      }
-      if (indent >= 6 && recordName) {
-        const m = /^\s+([a-zA-Z_]+):\s*(.*)$/.exec(line);
-        if (m) {
-          const value = m[2].replace(/^["']|["']$/g, '');
-          if (value !== '') {
-            out.records[recordName][m[1]] = value;
-            recordField = m[1];
-          } else {
-            recordField = m[1];
-          }
-        } else if (recordField) {
-          const cont = line.trim().replace(/^["']|["']$/g, '');
-          if (cont) out.records[recordName][recordField] = (out.records[recordName][recordField] ?? '') + cont;
-        }
+    for (const value of Object.values(json)) {
+      if (value !== null && typeof value === 'object') {
+        const key = (value as Record<string, unknown>)['key'];
+        if (typeof key === 'string' && key.length > 0) return { key, shape: 'json provider key' };
       }
     }
   }
-  return out;
+
+  let text = '';
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    return null;
+  }
+  for (const line of text.split('\n')) {
+    const m = /^\s*(?:export\s+)?([A-Z0-9_]*API_KEY)\s*=\s*["']?([^"'\s]+)["']?/.exec(line);
+    if (m) return { key: m[2].trim(), shape: 'env-style line' };
+  }
+
+  try {
+    const refs = readYamlRefs(path);
+    const entry = Object.entries(refs).find(([name, value]) => name.endsWith('API_KEY') && value.length > 0);
+    if (entry) return { key: entry[1], shape: 'yaml refs' };
+  } catch {
+    /* not a YAML file either */
+  }
+  return null;
 }
 
 const DEFAULT_BASE_URL = 'https://api.deepseek.com/v1';
@@ -109,45 +126,15 @@ export function probeCredentials(options: { home?: string; baseUrl?: string } = 
   considered.push({ source: 'environment', found: fromEnv.length > 0, detail: fingerprint(fromEnv) });
   if (fromEnv) return { hit: { apiKey: fromEnv, source: 'environment', baseUrl }, considered };
 
-  const authPath = join(home, '.config/dora/credentials.json');
-  const auth = readJson(authPath);
-  const deepseekAuth = auth && typeof auth['deepseek'] === 'object' ? (auth['deepseek'] as Record<string, unknown>) : null;
-  const piKey = deepseekAuth && typeof deepseekAuth['key'] === 'string' ? (deepseekAuth['key'] as string) : '';
-  considered.push({ source: authPath, found: piKey.length > 0, detail: fingerprint(piKey) });
-  if (piKey) return { hit: { apiKey: piKey, source: authPath, baseUrl }, considered };
-
-  const envPath = join(home, '.config/dora/credentials.env');
-  let envKey = '';
-  if (existsSync(envPath)) {
-    for (const line of readFileSync(envPath, 'utf8').split('\n')) {
-      const m = /^\s*(?:export\s+)?([A-Z0-9_]*API_KEY)\s*=\s*["']?([^"']+)["']?/.exec(line);
-      if (m) {
-        envKey = m[2].trim();
-        break;
-      }
-    }
+  for (const path of credentialFiles(home)) {
+    const found = readKeyFromFile(path);
+    considered.push({
+      source: found ? path + ' (' + found.shape + ')' : path,
+      found: found !== null,
+      detail: found ? fingerprint(found.key) : '(absent)'
+    });
+    if (found) return { hit: { apiKey: found.key, source: path, baseUrl: found.baseUrl ?? baseUrl }, considered };
   }
-  considered.push({ source: envPath, found: envKey.length > 0, detail: fingerprint(envKey) });
-  if (envKey) return { hit: { apiKey: envKey, source: envPath, baseUrl }, considered };
-
-  const credPath = join(home, '.config/dora/credentials.yaml');
-  const creds = readCredentialYaml(credPath);
-  const refKey = creds.refs['DEEPSEEK_API_KEY'] ?? '';
-  const looksLikeKey = refKey.startsWith('sk-');
-  considered.push({
-    source: credPath + ' (refs.DEEPSEEK_API_KEY)',
-    found: looksLikeKey,
-    detail: looksLikeKey ? fingerprint(refKey) : refKey ? 'indirection: ' + refKey.slice(0, 40) : '(absent)'
-  });
-  if (looksLikeKey) return { hit: { apiKey: refKey, source: credPath, baseUrl }, considered };
-
-  const record = creds.records['deepseek-account-platform/default'];
-  const token = record && typeof record['token'] === 'string' ? record['token'] : '';
-  considered.push({
-    source: credPath + ' (records.deepseek-account-platform/default)',
-    found: token.length > 0,
-    detail: token ? 'account session token, not an API key' : '(absent)'
-  });
 
   return { hit: null, considered };
 }
