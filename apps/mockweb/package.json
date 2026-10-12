@@ -1,0 +1,18 @@
+{
+  "name": "@dora/mockweb",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "description": "Hermetic mock web environment (restaurant, shop, flights) for testing the cloud-browser agent.",
+  "engines": {
+    "node": ">=25"
+  },
+  "scripts": {
+    "start": "node src/index.ts",
+    "dev": "node --watch src/index.ts"
+  }
+}

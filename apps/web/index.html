@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Dora.ai console</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<a class="skip-link" href="#view">Skip to content</a>
+
+<header class="topbar">
+  <div class="brand">Dora.ai<span class="brand-sub">console</span></div>
+  <nav id="nav" class="nav" aria-label="Console sections"></nav>
+  <div class="topbar-right">
+    <button id="stream-chip" class="chip" type="button" data-tone="none" title="Stream every runtime event (/api/events/stream)">events: off</button>
+    <span id="health-chip" class="chip" data-tone="none">connecting…</span>
+    <button id="token-button" class="btn btn-ghost" type="button">Token</button>
+  </div>
+</header>
+
+<div id="banner" class="banner" role="alert" hidden>
+  <div id="banner-text" class="banner-text"></div>
+  <button id="banner-dismiss" class="btn btn-sm btn-ghost" type="button">Dismiss</button>
+</div>
+
+<main id="view" class="view" tabindex="-1"></main>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

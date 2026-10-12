@@ -1,0 +1,43 @@
+{
+  "name": "dora-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dora.ai — a personal agent runtime: agent loop, tools CLI, control plane and data plane.",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "demo": "node --disable-warning=ExperimentalWarning bin/dora.ts demo",
+    "serve": "node --disable-warning=ExperimentalWarning bin/dora.ts serve",
+    "chat": "node --disable-warning=ExperimentalWarning bin/dora.ts chat",
+    "init": "node --disable-warning=ExperimentalWarning bin/dora.ts init",
+    "doctor": "node --disable-warning=ExperimentalWarning bin/dora.ts doctor",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-concurrency=1 \"tests/*.test.ts\"",
+    "bench": "node --disable-warning=ExperimentalWarning bin/dora.ts bench",
+    "logs": "node --disable-warning=ExperimentalWarning bin/dora.ts logs",
+    "build:cli": "esbuild packages/tools/src/cli.ts --bundle --platform=node --format=esm --target=node22 --external:@dora/runtime --outfile=packages/tools/dist/cli.mjs --log-level=warning"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "dependencies": {
+    "@dora/api": "workspace:*",
+    "@dora/bench": "workspace:*",
+    "@dora/core": "workspace:*",
+    "@dora/integrations": "workspace:*",
+    "@dora/memory": "workspace:*",
+    "@dora/mockweb": "workspace:*",
+    "@dora/observations": "workspace:*",
+    "@dora/providers": "workspace:*",
+    "@dora/runtime": "workspace:*",
+    "@dora/sandbox": "workspace:*",
+    "@dora/skills": "workspace:*",
+    "@dora/tools": "workspace:*",
+    "@dora/vault": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

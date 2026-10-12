@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Dora.ai conversation</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<a class="skip-link" href="#composer">Skip to composer</a>
+
+<header class="topbar">
+  <div class="brand">Dora.ai<span class="brand-sub">conversation</span></div>
+  <div class="topbar-right">
+    <span id="session-chip" class="chip" data-tone="none">session: finding…</span>
+    <span id="status-chip" class="chip" data-tone="none">idle</span>
+    <a class="btn btn-ghost" href="./index.html#/sessions">Console</a>
+  </div>
+</header>
+
+<div id="banner" class="banner" role="alert" hidden>
+  <div id="banner-text" class="banner-text"></div>
+  <button id="banner-dismiss" class="btn btn-sm btn-ghost" type="button">Dismiss</button>
+</div>
+
+<main class="agent-main">
+  <section id="token-bar" class="panel" hidden>
+    <form id="token-form" class="row">
+      <span class="field" style="flex:1 1 280px">Admin token
+        <input id="token-input" type="password" autocomplete="off" placeholder="paste the admin token" aria-label="Admin token">
+      </span>
+      <span class="field" style="flex:0 0 auto">
+        <button class="btn btn-primary" type="submit">Save token</button>
+      </span>
+    </form>
+    <p class="small muted">The token is kept in this browser only, under localStorage key dora.token.</p>
+  </section>
+
+  <div id="messages" class="chat chat-scroll" aria-live="polite" aria-label="Conversation"></div>
+
+  <form id="composer" class="panel stack agent-composer">
+    <label class="field" for="composer-text">Message</label>
+    <textarea id="composer-text" rows="3" placeholder="Message the agent…" spellcheck="true"></textarea>
+    <div class="spread">
+      <p id="composer-note" class="notice subtle">Connecting…</p>
+      <button id="send-button" class="btn btn-primary" type="submit">Send</button>
+    </div>
+    <div id="result-host"></div>
+  </form>
+</main>
+
+<script type="module">
+/* Standalone conversation surface. Same token rules as the console:
+   the token query parameter wins and is persisted, then localStorage dora.token. */
+
+var TOKEN_KEY = 'dora.token';
+var token = '';
+var sessionId = null;
+var events = [];
+var source = null;
+
+function el(tag, props, children) {
+  var node = document.createElement(tag);
+  if (props) {
+    Object.keys(props).forEach(function (key) {
+      var value = props[key];
+      if (value === null || value === undefined || value === false) return;
+      if (key === 'class') node.className = String(value);
+      else if (key === 'text') node.textContent = String(value);
+      else if (key === 'onclick') node.addEventListener('click', value);
+      else if (key === 'value') node.value = String(value);
+      else if (key === 'disabled') node.disabled = !!value;
+      else if (key === 'hidden') node.hidden = !!value;
+      else node.setAttribute(key, value === true ? '' : String(value));
+    });
+  }
+  (children || []).forEach(function (child) {
+    if (child === null || child === undefined || child === false) return;
+    if (Array.isArray(child)) child.forEach(function (nested) { if (nested) node.appendChild(nested); });
+    else if (child instanceof Node) node.appendChild(child);
+    else node.appendChild(document.createTextNode(String(child)));
+  });
+  return node;
+}
+
+function showBanner(message, kind) {
+  var banner = document.getElementById('banner');
+  banner.hidden = false;
+  banner.dataset.kind = kind || 'error';
+  document.getElementById('banner-text').textContent = String(message);
+}
+
+function hideBanner() { document.getElementById('banner').hidden = true; }
+
+function showTokenBar(message) {
+  document.getElementById('token-bar').hidden = false;
+  if (message) showBanner(message, 'warn');
+  var input = document.getElementById('token-input');
+  input.focus();
+}
+
+function storeToken(value) {
+  token = value || '';
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch (err) { /* private mode */ }
+}
+
+function loadToken() {
+  try {
+    var url = new URL(window.location.href);
+    var fromQuery = url.searchParams.get('token');
+    if (fromQuery) {
+      url.searchParams.delete('token');
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      storeToken(fromQuery);
+      return;
+    }
+    token = localStorage.getItem(TOKEN_KEY) || '';
+  } catch (err) { token = ''; }
+}
+
+function withToken(url) {
+  if (!token) return url;
+  return url + (url.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(token);
+}
+
+async function api(path, options) {
+  options = options || {};
+  var headers = {};
+  if (token) headers['authorization'] = 'Bearer ' + token;
+  var init = { method: options.method || 'GET', headers: headers, cache: 'no-store' };
+  if (options.body !== undefined) {
+    headers['content-type'] = 'application/json';
+    init.body = JSON.stringify(options.body);
+  }
+  var response;
+  try { response = await fetch(path, init); }
+  catch (err) { throw new Error('Cannot reach the API (' + (err && err.message ? err.message : 'network error') + ').'); }
+  if (response.status === 401) {
+    showTokenBar('The API rejected the current token.');
+    throw new Error('Not authorised.');
+  }
+  var raw = '';
+  try { raw = await response.text(); } catch (err) { raw = ''; }
+  var data = null;
+  if (raw) { try { data = JSON.parse(raw); } catch (err) { data = null; } }
+  if (!response.ok) throw new Error(data && data.error ? data.error : (raw || response.status + ' ' + response.statusText));
+  return data;
+}
+
+function roleFor(type) {
+  if (type === 'user_message') return 'user';
+  if (type === 'assistant_message') return 'assistant';
+  if (type === 'tool_call' || type === 'tool_result') return 'tool';
+  return 'system';
+}
+
+function bodyFor(event) {
+  var data = event.data || {};
+  if (event.type === 'user_message') return String(data.text || data.body || data.message || '');
+  if (event.type === 'assistant_message') return String(data.text || data.content || '');
+  if (event.type === 'tool_call') return String(data.name || data.path || 'tool') + (data.arguments ? ' ' + JSON.stringify(data.arguments) : '');
+  if (event.type === 'tool_result') return String(data.stdout || data.content || data.stderr || JSON.stringify(data, null, 2));
+  try { return JSON.stringify(data, null, 2); } catch (err) { return String(data); }
+}
+
+function fmtTime(ms) {
+  if (!ms) return '';
+  var date = new Date(Number(ms));
+  return isNaN(date.getTime()) ? '' : date.toLocaleString();
+}
+
+function messageFor(event) {
+  var role = roleFor(event.type);
+  return el('article', { class: 'msg', dataset: { role: role, id: event.id } }, [
+    el('div', { class: 'event-head' }, [
+      el('span', { class: 'badge', 'data-tone': role === 'user' ? 'accent' : role === 'assistant' ? 'ok' : role === 'tool' ? 'warn' : 'none' }, role),
+      el('span', { class: 'event-seq mono' }, event.type),
+      el('span', { class: 'event-seq' }, fmtTime(event.ts))
+    ]),
+    el('p', { class: 'msg-body' }, bodyFor(event))
+  ]);
+}
+
+function renderMessages() {
+  var host = document.getElementById('messages');
+  host.replaceChildren();
+  if (events.length === 0) {
+    host.appendChild(el('p', { class: 'empty' }, 'No events in this session yet.'));
+    return;
+  }
+  events.forEach(function (event) { host.appendChild(messageFor(event)); });
+  host.scrollTop = host.scrollHeight;
+}
+
+function appendEvent(event) {
+  if (!event || !event.id) return;
+  for (var i = 0; i < events.length; i++) if (events[i].id === event.id) return;
+  events.push(event);
+  var host = document.getElementById('messages');
+  if (events.length === 1) host.replaceChildren();
+  host.appendChild(messageFor(event));
+  host.scrollTop = host.scrollHeight;
+}
+
+function setStatus(label, tone) {
+  var chip = document.getElementById('status-chip');
+  chip.textContent = label;
+  chip.dataset.tone = tone || 'none';
+}
+
+function startStream() {
+  if (source) { source.close(); source = null; }
+  if (!sessionId) return;
+  setStatus('connecting…', 'accent');
+  var stream = new EventSource(withToken('/api/sessions/' + encodeURIComponent(sessionId) + '/stream'));
+  source = stream;
+  stream.addEventListener('open', function () { setStatus('live', 'ok'); });
+  stream.addEventListener('snapshot', function (event) {
+    var payload = {};
+    try { payload = JSON.parse(event.data); } catch (err) { payload = {}; }
+    events = payload.events || [];
+    renderMessages();
+  });
+  stream.addEventListener('event', function (event) {
+    var payload = null;
+    try { payload = JSON.parse(event.data); } catch (err) { payload = null; }
+    appendEvent(payload);
+  });
+  stream.addEventListener('error', function () {
+    if (source !== stream) return;
+    setStatus('reconnecting…', 'danger');
+  });
+}
+
+function disableComposer(note) {
+  document.getElementById('composer-text').disabled = true;
+  document.getElementById('send-button').disabled = true;
+  document.getElementById('composer-note').className = 'notice';
+  document.getElementById('composer-note').textContent = note;
+}
+
+function enableComposer() {
+  document.getElementById('composer-text').disabled = false;
+  document.getElementById('send-button').disabled = false;
+  var note = document.getElementById('composer-note');
+  note.className = 'notice subtle';
+  note.textContent = 'Posts to /api/sessions/' + sessionId + '/messages';
+}
+
+async function findMainSession() {
+  var data = await api('/api/sessions?limit=50');
+  var sessions = (data && data.sessions) || [];
+  var main = null;
+  sessions.forEach(function (session) { if (!main && session.kind === 'main') main = session; });
+  return main;
+}
+
+async function boot() {
+  loadToken();
+  document.getElementById('banner-dismiss').addEventListener('click', hideBanner);
+  document.getElementById('token-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var value = document.getElementById('token-input').value.trim();
+    if (!value) return;
+    storeToken(value);
+    document.getElementById('token-bar').hidden = true;
+    hideBanner();
+    events = [];
+    void start();
+  });
+
+  document.getElementById('composer').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    var area = document.getElementById('composer-text');
+    var button = document.getElementById('send-button');
+    var value = area.value.trim();
+    if (!value) { showBanner('Type a message first.', 'warn'); return; }
+    button.disabled = true;
+    button.textContent = 'Sending…';
+    try {
+      var data = await api('/api/sessions/' + encodeURIComponent(sessionId) + '/messages', { method: 'POST', body: { text: value } });
+      area.value = '';
+      var result = data && data.result ? data.result : {};
+      var host = document.getElementById('result-host');
+      host.replaceChildren(el('div', { class: 'stack' }, [
+        el('div', { class: 'inline' }, [el('span', { class: 'badge', 'data-tone': 'ok' }, String(result.status || 'ok')), el('span', { class: 'muted small' }, 'turns: ' + String(result.turns))]),
+        el('pre', {}, String(result.text || '(no text returned)'))
+      ]));
+      var refreshed = await api('/api/sessions/' + encodeURIComponent(sessionId) + '?since=0&limit=500').catch(function () { return null; });
+      if (refreshed && refreshed.events) { events = refreshed.events; renderMessages(); }
+    } catch (err) {
+      var message = err && err.message ? err.message : String(err);
+      if (message === 'Agent chat feature not enabled') {
+        disableComposer('Agent chat feature not enabled');
+      }
+      showBanner(message, 'error');
+    } finally {
+      var area2 = document.getElementById('composer-text');
+      if (!area2.disabled) { button.disabled = false; button.textContent = 'Send'; }
+    }
+  });
+
+  await start();
+}
+
+async function start() {
+  if (!token) { showTokenBar('An admin token is required.'); return; }
+  try {
+    var main = await findMainSession();
+    if (!main) {
+      setStatus('no session', 'danger');
+      document.getElementById('session-chip').textContent = 'no main session';
+      disableComposer('No main session exists yet — create one in the console.');
+      showBanner('No main session exists for this account. Create one in the console first.', 'error');
+      return;
+    }
+    sessionId = main.id;
+    document.getElementById('session-chip').textContent = 'session: ' + (main.title || main.id);
+    document.getElementById('session-chip').title = main.id;
+    enableComposer();
+    var detail = await api('/api/sessions/' + encodeURIComponent(sessionId) + '?since=0&limit=500');
+    events = (detail && detail.events) || [];
+    renderMessages();
+    startStream();
+    hideBanner();
+  } catch (err) {
+    var message = err && err.message ? err.message : String(err);
+    setStatus('error', 'danger');
+    if (message === 'Agent chat feature not enabled') {
+      disableComposer('Agent chat feature not enabled');
+    } else {
+      disableComposer('Unavailable.');
+    }
+    showBanner(message, 'error');
+  }
+}
+
+void boot();
+</script>
+</body>
+</html>

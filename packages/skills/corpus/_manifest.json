@@ -1,0 +1,235 @@
+{
+  "skills": [
+    {
+      "id": "agent-mail",
+      "name": "agent-mail",
+      "description": "Use when you must read, triage, draft, reply to, or send mail from the agent-owned mailbox, or when a delegated email task needs the Email permissions rules.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": [
+        "email-permissions.md"
+      ]
+    },
+    {
+      "id": "browser-management",
+      "name": "browser-management",
+      "description": "Use when you acquire, extend, release, or contend for a rented cloud browser lease, or when guidance tokens and shared write leases decide who may drive.",
+      "primary_agent_roles": [
+        "main_agent",
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "browser-use",
+      "name": "browser-use",
+      "description": "Use when you drive a rented cloud browser to read a page, fill a form, or complete a flow, and you need the snapshot, ref, and verification discipline that keeps the run truthful.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "bug-report",
+      "name": "bug-report",
+      "description": "Use when Dora itself misbehaves, such as a tool returning a wrong result, a wake misfiring, or a page breaking because of our side, and the member needs it reported with the right evidence.",
+      "primary_agent_roles": [
+        "main_agent",
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "company-identity",
+      "name": "company-identity",
+      "description": "Use when the member asks about Dora the company, its founders or creators, or who built this agent, while product, feature, integration, and launch questions belong to dora-faq.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "data-privacy",
+      "name": "data-privacy",
+      "description": "Use when the member asks what data Dora stores, how it is used, whether it trains models, or how to delete it.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "deep-research",
+      "name": "deep-research",
+      "description": "Use when a question needs multiple sources, conflicting evidence must be weighed, or the answer will feed a decision with money, legal, or health stakes.",
+      "primary_agent_roles": [
+        "main_agent",
+        "task_agent"
+      ],
+      "references": [
+        "source-quality.md"
+      ]
+    },
+    {
+      "id": "document-signing",
+      "name": "document-signing",
+      "description": "Use when a document must be prepared, filled, or signed, or when the member asks whether something can be signed on their behalf.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "dora-faq",
+      "name": "dora-faq",
+      "description": "Use when the member asks what Dora can do, which integrations exist, whether something has launched or is available, or how pricing works.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "messaging",
+      "name": "messaging",
+      "description": "Use when you write to another person as the member over WhatsApp, iMessage/SMS, or any other authenticated conversation channel.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": [
+        "handoff.md",
+        "tone.md"
+      ]
+    },
+    {
+      "id": "onboarding",
+      "name": "onboarding",
+      "description": "Use during the member's first run, when you need to learn who they are, connect their services, and set up the first outcomes.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "presentations",
+      "name": "presentations",
+      "description": "Use when the member asks for a slide deck, a pitch, or a readout built from their own material.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "proactive-value-creation",
+      "name": "proactive-value-creation",
+      "description": "Use when you are running as a platform-owned recurring task agent whose job is to create value the user should not have to ask for.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": [
+        "value-loops.md"
+      ]
+    },
+    {
+      "id": "scheduling",
+      "name": "scheduling",
+      "description": "Use when the member asks to schedule, move, or protect time on their calendar, or when a conflict, buffer, or travel time decides the answer.",
+      "primary_agent_roles": [
+        "main_agent",
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "shopping",
+      "name": "shopping",
+      "description": "Use when the member asks you to research, compare, or buy a physical or digital product.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "food-ordering",
+      "name": "food-ordering",
+      "description": "Use when the member asks you to order food for delivery or pickup.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "restaurant-booking",
+      "name": "restaurant-booking",
+      "description": "Use when the member asks you to book, hold, change, or cancel a table.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "restaurant-recommendations",
+      "name": "restaurant-recommendations",
+      "description": "Use when the member asks where to eat and no specific restaurant has been chosen yet.",
+      "primary_agent_roles": [
+        "main_agent",
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "rideshare",
+      "name": "rideshare",
+      "description": "Use when the member asks you to book a ride or decide when to leave for one.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "flight-booking",
+      "name": "flight-booking",
+      "description": "Use when the member asks you to search, compare, or book flights.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "google-docs",
+      "name": "google-docs",
+      "description": "Use when you read, edit, or comment on a Google Doc, especially one the member shares with other people.",
+      "primary_agent_roles": [
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "speaking",
+      "name": "speaking",
+      "description": "Use when you speak to the member aloud or read text into a voice channel.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "wake-subscriptions",
+      "name": "wake-subscriptions",
+      "description": "Use when you decide how to watch a future signal, choosing an event subscription or a scheduled wake, and when to cancel what you created.",
+      "primary_agent_roles": [
+        "main_agent",
+        "task_agent"
+      ],
+      "references": []
+    },
+    {
+      "id": "gamepigeon",
+      "name": "gamepigeon",
+      "description": "Use when you play a turn-based GamePigeon game with the member over iMessage.",
+      "primary_agent_roles": [
+        "main_agent"
+      ],
+      "references": []
+    }
+  ]
+}
