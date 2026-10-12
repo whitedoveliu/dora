@@ -8,7 +8,7 @@
 <a href="#-参考"><img src="https://img.shields.io/badge/工具面-214_个动作_%2F_40_个族-green?style=for-the-badge" alt="工具面"></a>
 <a href="#-验证"><img src="https://img.shields.io/badge/测试-59_项通过-brightgreen?style=for-the-badge" alt="测试"></a>
 <a href="#-架构"><img src="https://img.shields.io/badge/沙箱-seatbelt_%28本机%29-red?style=for-the-badge" alt="沙箱"></a>
-<a href="#-状态"><img src="https://img.shields.io/badge/状态-私有预览-lightgrey?style=for-the-badge" alt="状态"></a>
+<a href="#-许可证"><img src="https://img.shields.io/badge/许可证-待选定-lightgrey?style=for-the-badge" alt="许可证"></a>
 <img src="https://img.shields.io/badge/Node-%E2%89%A522.6-339933?logo=node.js&logoColor=white" alt="Node ≥ 22.6">
 
 </div>
@@ -153,8 +153,9 @@ node bin/dora.ts doctor      # node · sqlite · seatbelt · git · 围栏 · �
 有两种失败是环境导致、不是回归。没有 `/usr/bin/sandbox-exec` 时 bash 拒绝执行，这正是围栏在生效；
 真实 `bench` 需要模型凭证，而测试与 `demo` 不需要。
 
-## 📄 状态
+## 📄 许可证
 
-私有预览。目前没有授予任何许可证；仓库尚未公开，在许可证确定之前请勿复用代码。
+**尚未选定许可证**，目前保留所有权利。代码可以随意阅读，但复用需要一份还不存在的许可证；
+想用的话开个 issue 说一声。
 
 架构说明、机制对照表与运维手册在 [`docs/`](docs/)。

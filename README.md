@@ -8,7 +8,7 @@ English · [简体中文](README.zh-CN.md)
 <a href="#-reference"><img src="https://img.shields.io/badge/Tool_surface-214_actions_%2F_40_families-green?style=for-the-badge" alt="Tool surface"></a>
 <a href="#-verification"><img src="https://img.shields.io/badge/Tests-59_passing-brightgreen?style=for-the-badge" alt="Tests"></a>
 <a href="#-architecture"><img src="https://img.shields.io/badge/Sandbox-seatbelt_%28local%29-red?style=for-the-badge" alt="Sandbox"></a>
-<a href="#-status"><img src="https://img.shields.io/badge/Status-private_preview-lightgrey?style=for-the-badge" alt="Status"></a>
+<a href="#-license"><img src="https://img.shields.io/badge/License-not_chosen_yet-lightgrey?style=for-the-badge" alt="License"></a>
 <img src="https://img.shields.io/badge/Node-%E2%89%A522.6-339933?logo=node.js&logoColor=white" alt="Node ≥ 22.6">
 
 </div>
@@ -153,8 +153,9 @@ node bin/dora.ts doctor      # node · sqlite · seatbelt · git · fences · mo
 Two failures are environmental, not regressions. Without `/usr/bin/sandbox-exec` bash refuses to run, which is
 the fence working. A live `bench` run needs a model credential; tests and `demo` never do.
 
-## 📄 Status
+## 📄 License
 
-Private preview. No license is granted yet; the repository is not public and no code may be reused until one is.
+**No license has been chosen yet**, so all rights are reserved for now. You are welcome to read the code, but
+reuse needs a license that does not exist yet. Open an issue if you want to use it.
 
 Architecture notes, the mechanism table and the operations guide live in [`docs/`](docs/).
