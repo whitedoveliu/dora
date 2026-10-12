@@ -2,7 +2,7 @@
 
 # Dora.ai
 
-**个人 Agent 运行时 —— Instinct 架构的开源实现。**
+**开源版 Instinct。**
 
 [English](README.md) · **简体中文**
 
@@ -33,8 +33,6 @@ Dora 回答一个问题：要让一个个人 Agent 真的跑起来，需要哪�
   → hold
 ```
 
-Dora 与 Instinct 没有共享代码，也不隶属于它、未获得它的背书。
-
 ## ✨ 核心特性
 
 | | |
@@ -49,8 +47,6 @@ Dora 与 Instinct 没有共享代码，也不隶属于它、未获得它的背�
 | 📊 **可运行即可验证** | 59 个 `node:test` 用例、`dora demo` 逐条演示 23 个机制并给 PASS/FAIL、16 个 bench 任务按事件流评分 |
 
 ## 🤔 和 Instinct 的区别
-
-机制相同，底座不同。下表每一行都是**刻意的替换**，不是缺失的功能。
 
 | 维度 | Instinct（按已知文档） | Dora |
 |---|---|---|

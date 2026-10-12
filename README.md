@@ -2,7 +2,7 @@
 
 # Dora.ai
 
-**A personal agent runtime — the open-source implementation of the Instinct architecture.**
+**The open-source version of Instinct.**
 
 English · [简体中文](README.zh-CN.md)
 
@@ -33,8 +33,6 @@ wake (message · schedule · subscription · task report)
   → hold
 ```
 
-Dora shares no code with Instinct and is not affiliated with or endorsed by it.
-
 ## ✨ Key features
 
 | | |
@@ -49,8 +47,6 @@ Dora shares no code with Instinct and is not affiliated with or endorsed by it.
 | 📊 **Verifiable by running it** | 59 `node:test` cases, `dora demo` walks 23 mechanisms with PASS/FAIL, 16 bench tasks scored on the event stream |
 
 ## 🤔 How it differs from Instinct
-
-Same mechanisms, different substrate. Everything below is a deliberate substitution, not a missing feature.
 
 | Dimension | Instinct (as documented) | Dora |
 |---|---|---|
