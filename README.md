@@ -17,8 +17,8 @@ English · [简体中文](README.zh-CN.md)
 
 ## 📌 What this is
 
-Dora answers one question: what does it take to run a personal agent for real — one that holds a member's
-memory, speaks on their channels, and acts only through tools you can fence in?
+Dora is a resident personal agent. The main agent takes messages and keeps the member's memory; errands go to a
+task agent; and every real action is a `tools` CLI call made inside a sandbox.
 
 It is the open-source implementation of the architecture documented for **Instinct**: the same mechanisms,
 rebuilt from scratch in TypeScript on Node's standard library, and moved off the cloud onto your own machine.
@@ -61,7 +61,7 @@ wake (message · schedule · subscription · task report)
 
 ## 🧩 What you build yourself to get Instinct's effects
 
-Nothing below is hidden behind a paywall — it is the part that needs a real account, a phone number or a cloud.
+Each one needs a real account, a phone number or a cloud resource.
 
 | Effect you want | What Dora ships today | What you add |
 |---|---|---|
@@ -111,8 +111,8 @@ packages/{memory,observations,vault}   the three data planes
 packages/{integrations,providers,skills}
 ```
 
-Boundary rules: the model never sees a tool contract until the gate serves it; every tool call is a process
-inside the fence; the main agent delegates — a task agent drives the browser and may never write to a channel.
+Boundary rules: the model never sees a tool contract until the gate serves it, and every tool call is a process
+inside the fence. The main agent delegates; a task agent drives the browser and may never write to a channel.
 
 ## 📊 Reference
 
@@ -152,8 +152,8 @@ node bin/dora.ts demo        # 23 mechanisms
 node bin/dora.ts doctor      # node · sqlite · seatbelt · git · fences · model · skills · tools
 ```
 
-Two failures are environmental, not regressions: without `/usr/bin/sandbox-exec` bash refuses to run (that is
-the fence working), and a live `bench` run needs a model credential — tests and `demo` never do.
+Two failures are environmental, not regressions. Without `/usr/bin/sandbox-exec` bash refuses to run, which is
+the fence working. A live `bench` run needs a model credential; tests and `demo` never do.
 
 ## 📄 Status
 

@@ -17,8 +17,8 @@
 
 ## 📌 这是什么
 
-Dora 回答一个问题：要让一个个人 Agent 真的跑起来，需要哪些东西——它记得住会员的事、能在会员的通道上说话、
-并且只通过你能围起来的工具动手。
+Dora 是一个常驻的个人 Agent。主 Agent 收消息、维护记忆，动手的活派给子 Agent，
+所有真实动作都在沙箱里由 `tools` CLI 发出。
 
 它是 **Instinct** 那套架构的开源实现：机制一模一样，用 TypeScript 在 Node 标准库上从零重写，
 并把执行位置从云端搬到了你自己的机器上。
@@ -61,7 +61,7 @@ Dora 回答一个问题：要让一个个人 Agent 真的跑起来，需要哪�
 
 ## 🧩 想达到 Instinct 的效果，你需要自己补什么
 
-下面这些没有藏起来，只是每一件都需要真实账号、手机号或云资源。
+每一件都需要真实账号、手机号或云资源。
 
 | 你想要的"效果" | Dora 现在的样子 | 你需要补上 |
 |---|---|---|
@@ -111,8 +111,8 @@ packages/{memory,observations,vault}   三处数据面
 packages/{integrations,providers,skills}
 ```
 
-边界规则：模型在看到契约之前不知道工具存在；每次工具调用都是围栏内的一个进程；
-主 Agent 负责委派——浏览器由子 Agent 驱动，且子 Agent 永远不能写通道。
+边界规则：模型在看到契约之前不知道工具存在；每次工具调用都是围栏内的一个进程。
+委派由主 Agent 负责，浏览器由子 Agent 驱动，子 Agent 不能写通道。
 
 ## 📊 参考
 
@@ -152,8 +152,8 @@ node bin/dora.ts demo        # 23 个机制
 node bin/dora.ts doctor      # node · sqlite · seatbelt · git · 围栏 · 模型 · skill · 工具面
 ```
 
-有两种失败是环境导致、不是回归：没有 `/usr/bin/sandbox-exec` 时 bash 拒绝执行（这正是围栏在生效），
-以及真实 `bench` 需要模型凭证——测试与 `demo` 都不需要。
+有两种失败是环境导致、不是回归。没有 `/usr/bin/sandbox-exec` 时 bash 拒绝执行，这正是围栏在生效；
+真实 `bench` 需要模型凭证，而测试与 `demo` 不需要。
 
 ## 📄 状态
 
